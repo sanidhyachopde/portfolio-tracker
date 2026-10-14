@@ -142,22 +142,26 @@
         <button onclick="closeModal('cashModal')" class="text-slate-400 text-sm hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div>
-        <label class="text-xs text-slate-400 mb-1 block">Citi Savings (HYSA)</label>
-        <input type="number" step="0.01" id="citiInput" value="37009.48" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+        <label class="text-xs text-slate-300 mb-1 block font-medium">E*TRADE HYSA (4.25%)</label>
+        <input type="number" step="0.01" id="etradeInput" value="36009.48" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
       </div>
       <div>
-        <label class="text-xs text-slate-400 mb-1 block">BofA Checking</label>
-        <input type="number" step="0.01" id="bofaInput" value="617.44" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+        <label class="text-xs text-slate-300 mb-1 block font-medium">Citi Savings (HYSA)</label>
+        <input type="number" step="0.01" id="citiInput" value="1000.00" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+      </div>
+      <div>
+        <label class="text-xs text-slate-300 mb-1 block font-medium">BofA Checking</label>
+        <input type="number" step="0.01" id="bofaInput" value="617.44" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
       </div>
       <button onclick="submitCashUpdate()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm transition active:scale-98">
         Save Cash to Google Sheet
       </button>
     </div>
   </div>
-
+  
   <script>
     // PASTE YOUR APPS SCRIPT WEB APP URL HERE:
-    const API_URL = "https://script.google.com/macros/s/AKfycbw0uclI-jQv96DZvI5TwDhRwUMn72VwwkaaefO1cC9_Ql5_FLvHf7gekrbeX6BTNzQnLA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw_1wbYhqDnP4N_raEboIyeA4vp76rk26rCnVw1dXw_rQcaAvYhZNfTgx6BXDDPNlrI/exec";
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -340,14 +344,19 @@
     }
 
     async function submitCashUpdate() {
-      const bofa = document.getElementById("bofaInput").value;
+      const etrade = document.getElementById("etradeInput").value;
       const citi = document.getElementById("citiInput").value;
+      const bofa = document.getElementById("bofaInput").value;
       closeModal("cashModal");
+
+      const total = Number(etrade) + Number(citi) + Number(bofa);
+      defaultData.buckets[0].marketValue = total;
+      renderUI(defaultData);
 
       if (API_URL && !API_URL.includes("YOUR_APPS_SCRIPT")) {
         await fetch(API_URL, {
           method: "POST",
-          body: JSON.stringify({ action: "UPDATE_CASH", bofa: bofa, citi: citi })
+          body: JSON.stringify({ action: "UPDATE_CASH", etrade: etrade, citi: citi, bofa: bofa })
         });
         fetchData();
       }

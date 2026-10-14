@@ -9,8 +9,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Net Worth Dashboard</title>
 
-  <!-- PWA Web App Manifest (Embedded directly as a Data URI) -->
-  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Net%20Worth%20Dashboard%22%2C%22short_name%22%3A%22NetWorth%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23090D16%22%2C%22theme_color%22%3A%22%23090D16%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2454%2F2454282.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Net%20Worth%20Dashboard%22%2C%22short_name%22%3A%22NetWorth%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23090D16%22%2C%22theme_color%22%3A%22%23090D16%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2454%2F2454282.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -119,29 +119,32 @@
     // PASTE YOUR APPS SCRIPT WEB APP URL HERE:
     const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 
-    // 1. REGISTER AN INLINE SERVICE WORKER FOR PWA INSTALL ELIGIBILITY
+    // 1. REGISTER sw.js (Standard HTTP/HTTPS Service Worker)
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swBlob = new Blob([
-          `self.addEventListener('install', e => self.skipWaiting());
-           self.addEventListener('activate', e => self.clients.claim());
-           self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));`
-        ], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(swBlob);
-        navigator.serviceWorker.register(swUrl).catch(() => {});
-      });
+      navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration note:', err));
     }
 
-    // Baseline fallback state
+    // Clean percentage formatter (turns 0.01059 into +1.06%)
+    function formatPct(val) {
+      if (!val) return "0.00%";
+      let str = String(val).trim();
+      if (str.endsWith("%")) return str.startsWith("+") || str.startsWith("-") ? str : "+" + str;
+      let num = parseFloat(str);
+      if (isNaN(num)) return "0.00%";
+      if (Math.abs(num) <= 1.0) num = num * 100;
+      let sign = num > 0 ? "+" : "";
+      return sign + num.toFixed(2) + "%";
+    }
+
     const defaultData = {
       totalNetWorth: 244820.14,
       totalCostBasis: 203159.22,
       totalGainLoss: 41660.92,
-      returnPct: "20.51%",
+      returnPct: "+20.51%",
       conservativeFireProgress: "12.98",
       buckets: [
         { name: "Cash & Liquid Reserves", marketValue: 37626.92, returnPct: "0.00%" },
-        { name: "Taxable & Crypto", marketValue: 27278.23, returnPct: "+17.95%" },
+        { name: "Taxable Brokerage & Crypto", marketValue: 27278.23, returnPct: "+17.95%" },
         { name: "Fidelity Roth IRA", marketValue: 15436.71, returnPct: "+4.80%" },
         { name: "HSA Bank (Healthcare)", marketValue: 5803.71, returnPct: "+9.12%" },
         { name: "Vanguard 401(k) Plan", marketValue: 83381.86, returnPct: "+44.79%" },
@@ -150,7 +153,109 @@
     };
 
     function renderUI(data) {
-      document.getElementById("heroNetWorth").textContent = "\$" + Number(data.totalNetWorth).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      document.getElementById("heroCostBasis").textContent = "\$" + Number(data.totalCostBasis).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      document.getElementById("heroTotalGain").textContent = Number(data.totalGainLoss).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      document.getElementById("returnBadge").textContent = data.returnPct.startsWith
+      if (!data) return;
+
+      document.getElementById("heroNetWorth").textContent = "\$" + Number(data.totalNetWorth || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById("heroCostBasis").textContent = "\$" + Number(data.totalCostBasis || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById("heroTotalGain").textContent = Number(data.totalGainLoss || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      
+      const retText = formatPct(data.returnPct);
+      document.getElementById("returnBadge").textContent = retText;
+      
+      const fireProg = Number(data.conservativeFireProgress || 0);
+      document.getElementById("firePercent").textContent = fireProg.toFixed(2) + "%";
+      document.getElementById("fireBar").style.width = Math.min(100, Math.max(0, fireProg)) + "%";
+
+      const container = document.getElementById("bucketsContainer");
+      container.innerHTML = "";
+
+      const icons = ["fa-wallet", "fa-chart-pie", "fa-shield-halved", "fa-heart-pulse", "fa-landmark", "fa-building"];
+      const colors = ["text-blue-400 bg-blue-500/10", "text-purple-400 bg-purple-500/10", "text-teal-400 bg-teal-500/10", "text-emerald-400 bg-emerald-500/10", "text-amber-400 bg-amber-500/10", "text-indigo-400 bg-indigo-500/10"];
+
+      const bucketsList = data.buckets && data.buckets.length > 0 ? data.buckets : defaultData.buckets;
+
+      bucketsList.forEach((b, idx) => {
+        const item = document.createElement("div");
+        item.className = "p-3.5 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between";
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg ${colors[idx % colors.length]} flex items-center justify-center text-xs">
+              <i class="fa-solid ${icons[idx % icons.length]}"></i>
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-white">${b.name}</div>
+              <div class="text-[10px] text-slate-400">Return: <span class="text-emerald-400 font-medium">${formatPct(b.returnPct)}</span></div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs font-bold text-white">$${Number(b.marketValue || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    async function fetchData() {
+      const btn = document.getElementById("refreshBtn");
+      btn.classList.add("animate-spin");
+      try {
+        if (!API_URL || API_URL.includes("YOUR_APPS_SCRIPT")) {
+          setTimeout(() => { btn.classList.remove("animate-spin"); renderUI(defaultData); }, 300);
+          return;
+        }
+        const res = await fetch(API_URL);
+        const json = await res.json();
+        localStorage.setItem("cachedPortfolio", JSON.stringify(json));
+        renderUI(json);
+      } catch (err) {
+        console.error("Fetch failed", err);
+        renderUI(defaultData);
+      } finally {
+        btn.classList.remove("animate-spin");
+      }
+    }
+
+    async function submitCashUpdate() {
+      const bofa = document.getElementById("bofaInput").value;
+      const citi = document.getElementById("citiInput").value;
+      closeModal("cashModal");
+
+      defaultData.buckets[0].marketValue = Number(bofa) + Number(citi);
+      renderUI(defaultData);
+
+      if (API_URL && !API_URL.includes("YOUR_APPS_SCRIPT")) {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "UPDATE_CASH", bofa: bofa, citi: citi })
+        });
+        fetchData();
+      }
+    }
+
+    async function executeTuesdayDCA() {
+      if (!confirm("Execute Tuesday DCA? This deducts \$317.06 from SPAXX cash.")) return;
+      if (API_URL && !API_URL.includes("YOUR_APPS_SCRIPT")) {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "EXECUTE_ROTH_TUESDAY" })
+        });
+        fetchData();
+      } else {
+        alert("Tuesday DCA logged locally (-\$317.06).");
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove("hidden"); document.getElementById(id).classList.add("flex"); }
+    function closeModal(id) { document.getElementById(id).classList.add("hidden"); document.getElementById(id).classList.remove("flex"); }
+
+    // Init: Load cached or default data immediately
+    const cached = localStorage.getItem("cachedPortfolio");
+    if (cached) {
+      try { renderUI(JSON.parse(cached)); } catch(e) { renderUI(defaultData); }
+    } else {
+      renderUI(defaultData);
+    }
+    fetchData();
+  </script>
+</body>
+</html>

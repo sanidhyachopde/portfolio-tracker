@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#090D16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Net Worth Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #090D16; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card-glow { box-shadow: 0 4px 20px -2px rgba(16, 185, 129, 0.08); }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen pb-24">
+
+  <!-- TOP HEADER -->
+  <header class="px-5 pt-8 pb-4 flex justify-between items-center border-b border-slate-800/80 bg-[#090D16]/90 backdrop-blur sticky top-0 z-20">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Master Portfolio</p>
+      <h1 class="text-lg font-bold text-white tracking-tight">Audit-Grade Tracker</h1>
+    </div>
+    <button onclick="fetchData()" id="refreshBtn" class="w-9 h-9 rounded-full bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300 active:scale-95 transition">
+      <i class="fa-solid fa-arrows-rotate text-sm"></i>
+    </button>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="px-5 pt-5 space-y-5 max-w-md mx-auto">
+
+    <!-- HERO TOTAL NET WORTH CARD -->
+    <div class="bg-gradient-to-br from-slate-900 to-slate-800/90 rounded-2xl p-5 border border-slate-700/60 card-glow relative overflow-hidden">
+      <div class="flex justify-between items-start mb-2">
+        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Net Worth</span>
+        <span id="returnBadge" class="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          +20.51%
+        </span>
+      </div>
+      <div class="text-3xl font-black text-white tracking-tight mb-2" id="heroNetWorth">\$244,820.14</div>
+      <div class="flex items-center gap-2 text-xs text-slate-400">
+        <span>Contributed: <strong class="text-slate-200" id="heroCostBasis">\$203,159.22</strong></span>
+        <span>•</span>
+        <span class="text-emerald-400 font-medium">+<strong id="heroTotalGain">\$41,660.92</strong> gain</span>
+      </div>
+
+      <!-- PROGRESS BAR (CONSERVATIVE FIRE) -->
+      <div class="mt-4 pt-3 border-t border-slate-700/50">
+        <div class="flex justify-between text-xs mb-1.5">
+          <span class="text-slate-400">FIRE Target (\$1.89M)</span>
+          <span class="font-bold text-emerald-400" id="firePercent">12.98%</span>
+        </div>
+        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+          <div id="fireBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-700" style="width: 13%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="grid grid-cols-2 gap-3">
+      <button onclick="openModal('cashModal')" class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl text-left hover:border-slate-700 active:scale-98 transition flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-building-columns"></i>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-slate-200">Update Cash</div>
+          <div class="text-[10px] text-slate-400">Citi & BofA</div>
+        </div>
+      </button>
+
+      <button onclick="executeTuesdayDCA()" class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl text-left hover:border-slate-700 active:scale-98 transition flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-bolt"></i>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-slate-200">Log Tuesday DCA</div>
+          <div class="text-[10px] text-slate-400">-\$317.06 from SPAXX</div>
+        </div>
+      </button>
+    </div>
+
+    <!-- ACCOUNT BUCKETS LIST -->
+    <div class="space-y-3">
+      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Portfolio Allocation</h2>
+      <div id="bucketsContainer" class="space-y-2.5">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </main>
+
+  <!-- UPDATE CASH MODAL -->
+  <div id="cashModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-30 hidden items-center justify-center p-5">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 w-full max-w-sm space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-sm text-white">Update Cash Balances</h3>
+        <button onclick="closeModal('cashModal')" class="text-slate-400 text-sm hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 mb-1 block">Citi Savings (HYSA)</label>
+        <input type="number" step="0.01" id="citiInput" value="37009.48" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 mb-1 block">BofA Checking</label>
+        <input type="number" step="0.01" id="bofaInput" value="617.44" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+      </div>
+      <button onclick="submitCashUpdate()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-sm transition active:scale-98">
+        Save to Google Sheet
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // PASTE YOUR APPS SCRIPT WEB APP URL HERE:
+    const API_URL = "https://script.google.com/macros/s/AKfycbwmj5AsM08c5X0LW-ZUEosnQDfkKlNHaJ5kIh58qZzoTjNsRe9coykCHE9He3HueQZnWw/exec";
+
+    // Initial baseline state
+    const defaultData = {
+      totalNetWorth: 244820.14,
+      totalCostBasis: 203159.22,
+      totalGainLoss: 41660.92,
+      returnPct: "20.51%",
+      conservativeFireProgress: "12.98",
+      buckets: [
+        { name: "Cash & Liquid Reserves", marketValue: 37626.92, returnPct: "0.00%", icon: "fa-wallet", color: "blue" },
+        { name: "Taxable & Crypto", marketValue: 27278.23, returnPct: "+17.95%", icon: "fa-chart-pie", color: "purple" },
+        { name: "Fidelity Roth IRA", marketValue: 15436.71, returnPct: "+4.80%", icon: "fa-shield-halved", color: "teal" },
+        { name: "HSA Bank (Healthcare)", marketValue: 5803.71, returnPct: "+9.12%", icon: "fa-heart-pulse", color: "emerald" },
+        { name: "Vanguard 401(k) Plan", marketValue: 83381.86, returnPct: "+44.79%", icon: "fa-landmark", color: "amber" },
+        { name: "Employer Stock — SAP", marketValue: 75292.70, returnPct: "+16.25%", icon: "fa-building", color: "indigo" }
+      ]
+    };
+
+    function renderUI(data) {
+      document.getElementById("heroNetWorth").textContent = "\$" + Number(data.totalNetWorth).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById("heroCostBasis").textContent = "\$" + Number(data.totalCostBasis).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById("heroTotalGain").textContent = Number(data.totalGainLoss).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      document.getElementById("returnBadge").textContent = data.returnPct.startsWith("+") ? data.returnPct : "+" + data.returnPct;
+      document.getElementById("firePercent").textContent = data.conservativeFireProgress + "%";
+      document.getElementById("fireBar").style.width = Math.min(100, data.conservativeFireProgress) + "%";
+
+      const container = document.getElementById("bucketsContainer");
+      container.innerHTML = "";
+
+      const icons = ["fa-wallet", "fa-chart-pie", "fa-shield-halved", "fa-heart-pulse", "fa-landmark", "fa-building"];
+      const colors = ["text-blue-400 bg-blue-500/10", "text-purple-400 bg-purple-500/10", "text-teal-400 bg-teal-500/10", "text-emerald-400 bg-emerald-500/10", "text-amber-400 bg-amber-500/10", "text-indigo-400 bg-indigo-500/10"];
+
+      data.buckets.forEach((b, idx) => {
+        const item = document.createElement("div");
+        item.className = "p-3.5 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between";
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg ${colors[idx % colors.length]} flex items-center justify-center text-xs">
+              <i class="fa-solid ${icons[idx % icons.length]}"></i>
+            </div>
+            <div>
+              <div class="text-xs font-semibold text-white">${b.name}</div>
+              <div class="text-[10px] text-slate-400">Return: <span class="text-emerald-400 font-medium">${b.returnPct}</span></div>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs font-bold text-white">$${Number(b.marketValue).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    async function fetchData() {
+      const btn = document.getElementById("refreshBtn");
+      btn.classList.add("animate-spin");
+      try {
+        if (!API_URL || API_URL.includes("YOUR_APPS_SCRIPT")) {
+          setTimeout(() => { btn.classList.remove("animate-spin"); renderUI(defaultData); }, 500);
+          return;
+        }
+        const res = await fetch(API_URL);
+        const json = await res.json();
+        localStorage.setItem("cachedPortfolio", JSON.stringify(json));
+        renderUI(json);
+      } catch (err) {
+        console.error("Fetch failed", err);
+      } finally {
+        btn.classList.remove("animate-spin");
+      }
+    }
+
+    async function submitCashUpdate() {
+      const bofa = document.getElementById("bofaInput").value;
+      const citi = document.getElementById("citiInput").value;
+      closeModal("cashModal");
+
+      // Optimistic local update
+      defaultData.buckets[0].marketValue = Number(bofa) + Number(citi);
+      renderUI(defaultData);
+
+      if (API_URL && !API_URL.includes("YOUR_APPS_SCRIPT")) {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "UPDATE_CASH", bofa: bofa, citi: citi })
+        });
+        fetchData();
+      }
+    }
+
+    async function executeTuesdayDCA() {
+      if (!confirm("Execute Tuesday DCA? This deducts \$317.06 from SPAXX cash.")) return;
+      if (API_URL && !API_URL.includes("YOUR_APPS_SCRIPT")) {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "EXECUTE_ROTH_TUESDAY" })
+        });
+        fetchData();
+      } else {
+        alert("Tuesday DCA logged locally (-\$317.06).");
+      }
+    }
+
+    function openModal(id) { document.getElementById(id).classList.remove("hidden"); document.getElementById(id).classList.add("flex"); }
+    function closeModal(id) { document.getElementById(id).classList.add("hidden"); document.getElementById(id).classList.remove("flex"); }
+
+    // Init: Load cached or default data immediately
+    const cached = localStorage.getItem("cachedPortfolio");
+    if (cached) renderUI(JSON.parse(cached));
+    else renderUI(defaultData);
+    fetchData();
+  </script>
+</body>
+</html>

@@ -9,7 +9,6 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Net Worth Dashboard</title>
 
-  <!-- PWA Manifest -->
   <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Net%20Worth%20Dashboard%22%2C%22short_name%22%3A%22NetWorth%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23090D16%22%2C%22theme_color%22%3A%22%23090D16%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F2454%2F2454282.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -50,7 +49,7 @@
         <span class="text-emerald-400 font-medium">+<strong id="heroTotalGain">\$41,660.92</strong> gain</span>
       </div>
 
-      <!-- PROGRESS BAR (CONSERVATIVE FIRE) -->
+      <!-- PROGRESS BAR -->
       <div class="mt-4 pt-3 border-t border-slate-700/50">
         <div class="flex justify-between text-xs mb-1.5">
           <span class="text-slate-400">FIRE Target (\$1.89M)</span>
@@ -62,40 +61,81 @@
       </div>
     </div>
 
-    <!-- QUICK ACTIONS -->
-    <div class="grid grid-cols-2 gap-3">
-      <button onclick="openModal('cashModal')" class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl text-left hover:border-slate-700 active:scale-98 transition flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold">
-          <i class="fa-solid fa-building-columns"></i>
+    <!-- QUICK ACTIONS (3 BUTTONS) -->
+    <div class="grid grid-cols-3 gap-2.5">
+      <button onclick="openModal('paycheckModal')" class="p-3 bg-slate-900/90 border border-emerald-800/60 rounded-xl text-left hover:border-emerald-600 active:scale-98 transition flex flex-col justify-between">
+        <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold mb-1.5">
+          <i class="fa-solid fa-money-bill-transfer"></i>
         </div>
         <div>
-          <div class="text-xs font-semibold text-slate-200">Update Cash</div>
-          <div class="text-[10px] text-slate-400">Citi & BofA</div>
+          <div class="text-[11px] font-bold text-white">Log Paycheck</div>
+          <div class="text-[9px] text-slate-400">Own & 401(k)</div>
         </div>
       </button>
 
-      <button onclick="executeTuesdayDCA()" class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl text-left hover:border-slate-700 active:scale-98 transition flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold">
+      <button onclick="openModal('cashModal')" class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl text-left hover:border-slate-700 active:scale-98 transition flex flex-col justify-between">
+        <div class="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs font-bold mb-1.5">
+          <i class="fa-solid fa-building-columns"></i>
+        </div>
+        <div>
+          <div class="text-[11px] font-bold text-slate-200">Update Cash</div>
+          <div class="text-[9px] text-slate-400">Citi & BofA</div>
+        </div>
+      </button>
+
+      <button onclick="executeTuesdayDCA()" class="p-3 bg-slate-900/90 border border-slate-800 rounded-xl text-left hover:border-slate-700 active:scale-98 transition flex flex-col justify-between">
+        <div class="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs font-bold mb-1.5">
           <i class="fa-solid fa-bolt"></i>
         </div>
         <div>
-          <div class="text-xs font-semibold text-slate-200">Log Tuesday DCA</div>
-          <div class="text-[10px] text-slate-400">-\$317.06 from SPAXX</div>
+          <div class="text-[11px] font-bold text-slate-200">Tuesday DCA</div>
+          <div class="text-[9px] text-slate-400">-\$317.06 SPAXX</div>
         </div>
       </button>
     </div>
 
-    <!-- ACCOUNT BUCKETS LIST -->
+    <!-- ACCOUNT BUCKETS LIST (CLICKABLE ACCORDIONS) -->
     <div class="space-y-3">
-      <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Portfolio Allocation</h2>
+      <div class="flex justify-between items-center px-1">
+        <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Portfolio Allocation</h2>
+        <span class="text-[10px] text-slate-500 font-medium">Tap category to drill down</span>
+      </div>
       <div id="bucketsContainer" class="space-y-2.5">
         <!-- Rendered dynamically -->
       </div>
     </div>
   </main>
 
+  <!-- LOG PAYCHECK MODAL -->
+  <div id="paycheckModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-30 hidden items-center justify-center p-5">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 w-full max-w-sm space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-sm text-white">Log Paycheck Deposit</h3>
+          <p class="text-[10px] text-slate-400">Updates Own SAP shares and Roth 401(k) basis</p>
+        </div>
+        <button onclick="closeModal('paycheckModal')" class="text-slate-400 text-sm hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div>
+        <label class="text-xs text-slate-300 mb-1 block font-medium">Roth 401(k) Employee Contribution (\$)</label>
+        <input type="number" step="0.01" id="paycheck401k" value="977.43" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+      </div>
+      <div class="pt-1 border-t border-slate-800">
+        <label class="text-xs text-slate-300 mb-1 block font-medium">Own SAP New Shares Purchased</label>
+        <input type="number" step="0.0001" id="paycheckOwnShares" placeholder="e.g. 2.1450" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+      </div>
+      <div>
+        <label class="text-xs text-slate-300 mb-1 block font-medium">Own SAP Cost Basis Contributed (\$)</label>
+        <input type="number" step="0.01" id="paycheckOwnCost" placeholder="e.g. 390.97" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+      </div>
+      <button onclick="submitPaycheckUpdate()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-sm transition active:scale-98">
+        Apply Deposit to Portfolio
+      </button>
+    </div>
+  </div>
+
   <!-- UPDATE CASH MODAL -->
-  <div id="cashModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-30 hidden items-center justify-center p-5">
+  <div id="cashModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-30 hidden items-center justify-center p-5">
     <div class="bg-slate-900 border border-slate-700 rounded-2xl p-5 w-full max-w-sm space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-sm text-white">Update Cash Balances</h3>
@@ -103,28 +143,26 @@
       </div>
       <div>
         <label class="text-xs text-slate-400 mb-1 block">Citi Savings (HYSA)</label>
-        <input type="number" step="0.01" id="citiInput" value="37009.48" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+        <input type="number" step="0.01" id="citiInput" value="37009.48" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
       </div>
       <div>
         <label class="text-xs text-slate-400 mb-1 block">BofA Checking</label>
-        <input type="number" step="0.01" id="bofaInput" value="617.44" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
+        <input type="number" step="0.01" id="bofaInput" value="617.44" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
       </div>
-      <button onclick="submitCashUpdate()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-sm transition active:scale-98">
-        Save to Google Sheet
+      <button onclick="submitCashUpdate()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm transition active:scale-98">
+        Save Cash to Google Sheet
       </button>
     </div>
   </div>
 
   <script>
     // PASTE YOUR APPS SCRIPT WEB APP URL HERE:
-    const API_URL = "https://script.google.com/macros/s/AKfycbwmj5AsM08c5X0LW-ZUEosnQDfkKlNHaJ5kIh58qZzoTjNsRe9coykCHE9He3HueQZnWw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbw0uclI-jQv96DZvI5TwDhRwUMn72VwwkaaefO1cC9_Ql5_FLvHf7gekrbeX6BTNzQnLA/exec";
 
-    // 1. REGISTER sw.js (Standard HTTP/HTTPS Service Worker)
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration note:', err));
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
 
-    // Clean percentage formatter (turns 0.01059 into +1.06%)
     function formatPct(val) {
       if (!val) return "0.00%";
       let str = String(val).trim();
@@ -143,24 +181,59 @@
       returnPct: "+20.51%",
       conservativeFireProgress: "12.98",
       buckets: [
-        { name: "Cash & Liquid Reserves", marketValue: 37626.92, returnPct: "0.00%" },
-        { name: "Taxable Brokerage & Crypto", marketValue: 27278.23, returnPct: "+17.95%" },
-        { name: "Fidelity Roth IRA", marketValue: 15436.71, returnPct: "+4.80%" },
-        { name: "HSA Bank (Healthcare)", marketValue: 5803.71, returnPct: "+9.12%" },
-        { name: "Vanguard 401(k) Plan", marketValue: 83381.86, returnPct: "+44.79%" },
-        { name: "Employer Stock — SAP", marketValue: 75292.70, returnPct: "+16.25%" }
+        { id: "cash", name: "Cash & Liquid Reserves", marketValue: 37626.92, returnPct: "0.00%", subAccounts: [
+          { name: "Citi Savings (HYSA)", balance: 37009.48, type: "Liquid High-Yield Savings" },
+          { name: "Bank of America Checking", balance: 617.44, type: "Operating Checking" }
+        ]},
+        { id: "taxable", name: "Taxable Brokerage & Crypto", marketValue: 27278.23, returnPct: "+17.95%", subAccounts: [
+          { name: "Fidelity Brokerage (Z39660744)", balance: 15510.25, basis: 15500.00, returnPct: "+0.07%", items: "VTI, VXUS, SCHD, Cash" },
+          { name: "Robinhood Equities", balance: 10102.92, basis: 6116.82, returnPct: "+65.17%", items: "SPY, QQQ, HOOD, ZVRA, MARA, NIO, ACB, AAL" },
+          { name: "Robinhood Crypto", balance: 1665.06, basis: 1509.95, returnPct: "+10.27%", items: "0.667187 ETH" }
+        ]},
+        { id: "roth", name: "Fidelity Roth IRA", marketValue: 15436.71, returnPct: "+4.80%", subAccounts: [
+          { name: "Fidelity Roth IRA (263425563)", balance: 15436.71, basis: 14730.22, returnPct: "+4.80%", items: "QQQM, VTI, SCHD, VXUS, SPY, SPAXX Cash (\$3,626.60)" }
+        ]},
+        { id: "hsa", name: "HSA Bank (Healthcare)", marketValue: 5803.71, returnPct: "+9.12%", subAccounts: [
+          { name: "HSA Bank", balance: 5803.71, basis: 5318.44, returnPct: "+9.12%", items: "9.900 shares of SSSYX (S&P 500 Index)" }
+        ]},
+        { id: "vanguard", name: "Vanguard 401(k) Plan", marketValue: 83381.86, returnPct: "+44.79%", subAccounts: [
+          { name: "Target Retirement 2060 Trust Select", balance: 25848.08, units: "282.709 units" },
+          { name: "Institutional 500 Index Trust Unit A", balance: 19139.98, units: "119.580 units" },
+          { name: "Instl Total Intl Stock Index Unit A", balance: 13767.57, units: "87.131 units" },
+          { name: "Wellington Fund Admiral (VWENX)", balance: 12355.86, units: "151.105 shares" },
+          { name: "Instl Extended Market Index Unit A", balance: 12261.68, units: "84.686 units" },
+          { name: "DFA Global Equity Portfolio (DGEIX)", balance: 8.69, units: "0.194 units" }
+        ]},
+        { id: "sap", name: "Employer Stock — SAP", marketValue: 75292.70, returnPct: "+16.25%", subAccounts: [
+          { name: "Own SAP (100% Available)", balance: 45581.35, basis: 41079.20, items: "206.430758 shares" },
+          { name: "Elevate & Move SAP (Vested Available)", balance: 24441.86, basis: 23691.17, items: "110.693340 shares" },
+          { name: "Elevate & Move SAP (Locked RSUs)", balance: 5269.49, basis: 0.00, items: "23.864700 unvested units" }
+        ]}
       ]
     };
 
+    let activeAccordion = null;
+
+    function toggleAccordion(id) {
+      activeAccordion = activeAccordion === id ? null : id;
+      const el = document.getElementById(`sub-${id}`);
+      const arrow = document.getElementById(`arrow-${id}`);
+      if (!el) return;
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        if (arrow) arrow.classList.add('rotate-180');
+      } else {
+        el.classList.add('hidden');
+        if (arrow) arrow.classList.remove('rotate-180');
+      }
+    }
+
     function renderUI(data) {
       if (!data) return;
-
       document.getElementById("heroNetWorth").textContent = "\$" + Number(data.totalNetWorth || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
       document.getElementById("heroCostBasis").textContent = "\$" + Number(data.totalCostBasis || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
       document.getElementById("heroTotalGain").textContent = Number(data.totalGainLoss || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
-      
-      const retText = formatPct(data.returnPct);
-      document.getElementById("returnBadge").textContent = retText;
+      document.getElementById("returnBadge").textContent = formatPct(data.returnPct);
       
       const fireProg = Number(data.conservativeFireProgress || 0);
       document.getElementById("firePercent").textContent = fireProg.toFixed(2) + "%";
@@ -172,25 +245,55 @@
       const icons = ["fa-wallet", "fa-chart-pie", "fa-shield-halved", "fa-heart-pulse", "fa-landmark", "fa-building"];
       const colors = ["text-blue-400 bg-blue-500/10", "text-purple-400 bg-purple-500/10", "text-teal-400 bg-teal-500/10", "text-emerald-400 bg-emerald-500/10", "text-amber-400 bg-amber-500/10", "text-indigo-400 bg-indigo-500/10"];
 
-      const bucketsList = data.buckets && data.buckets.length > 0 ? data.buckets : defaultData.buckets;
+      const bucketsList = (data.buckets && data.buckets.length > 0) ? data.buckets : defaultData.buckets;
 
       bucketsList.forEach((b, idx) => {
+        const bucketId = b.id || `b-${idx}`;
         const item = document.createElement("div");
-        item.className = "p-3.5 bg-slate-900/60 border border-slate-800 rounded-xl flex items-center justify-between";
-        item.innerHTML = `
-          <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg ${colors[idx % colors.length]} flex items-center justify-center text-xs">
-              <i class="fa-solid ${icons[idx % icons.length]}"></i>
+        item.className = "bg-slate-900/70 border border-slate-800 rounded-xl overflow-hidden transition";
+
+        // Header (Clickable)
+        let html = `
+          <div onclick="toggleAccordion('${bucketId}')" class="p-3.5 flex items-center justify-between cursor-pointer active:bg-slate-800/40 select-none">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg ${colors[idx % colors.length]} flex items-center justify-center text-xs">
+                <i class="fa-solid ${icons[idx % icons.length]}"></i>
+              </div>
+              <div>
+                <div class="text-xs font-semibold text-white flex items-center gap-1.5">
+                  ${b.name}
+                  <i id="arrow-${bucketId}" class="fa-solid fa-chevron-down text-[10px] text-slate-500 transition-transform duration-200"></i>
+                </div>
+                <div class="text-[10px] text-slate-400">Return: <span class="text-emerald-400 font-medium">${formatPct(b.returnPct)}</span></div>
+              </div>
             </div>
-            <div>
-              <div class="text-xs font-semibold text-white">${b.name}</div>
-              <div class="text-[10px] text-slate-400">Return: <span class="text-emerald-400 font-medium">${formatPct(b.returnPct)}</span></div>
+            <div class="text-right">
+              <div class="text-xs font-bold text-white">$${Number(b.marketValue || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             </div>
-          </div>
-          <div class="text-right">
-            <div class="text-xs font-bold text-white">$${Number(b.marketValue || 0).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
           </div>
         `;
+
+        // Expandable Sub-Account Details
+        const subList = b.subAccounts || (defaultData.buckets[idx] ? defaultData.buckets[idx].subAccounts : []);
+        html += `<div id="sub-${bucketId}" class="hidden border-t border-slate-800/80 bg-slate-950/60 p-3 space-y-2">`;
+        
+        subList.forEach(sub => {
+          html += `
+            <div class="flex justify-between items-start text-xs border-b border-slate-900 pb-1.5 last:border-0 last:pb-0">
+              <div class="pr-2">
+                <div class="text-[11px] font-medium text-slate-200">${sub.name}</div>
+                <div class="text-[9px] text-slate-500">${sub.items || sub.units || sub.type || ""}</div>
+              </div>
+              <div class="text-right whitespace-nowrap">
+                <div class="text-[11px] font-bold text-slate-100">$${Number(sub.balance).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                ${sub.returnPct ? `<div class="text-[9px] text-emerald-400 font-medium">\${formatPct(sub.returnPct)}</div>` : ''}
+              </div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+        item.innerHTML = html;
         container.appendChild(item);
       });
     }
@@ -208,10 +311,31 @@
         localStorage.setItem("cachedPortfolio", JSON.stringify(json));
         renderUI(json);
       } catch (err) {
-        console.error("Fetch failed", err);
         renderUI(defaultData);
       } finally {
         btn.classList.remove("animate-spin");
+      }
+    }
+
+    async function submitPaycheckUpdate() {
+      const amount401k = document.getElementById("paycheck401k").value;
+      const ownShares = document.getElementById("paycheckOwnShares").value;
+      const ownCost = document.getElementById("paycheckOwnCost").value;
+      closeModal("paycheckModal");
+
+      if (API_URL && !API_URL.includes("YOUR_APPS_SCRIPT")) {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "LOG_PAYCHECK",
+            roth401kAmount: amount401k,
+            ownSapShares: ownShares,
+            ownSapCost: ownCost
+          })
+        });
+        fetchData();
+      } else {
+        alert("Paycheck logged locally!");
       }
     }
 
@@ -219,9 +343,6 @@
       const bofa = document.getElementById("bofaInput").value;
       const citi = document.getElementById("citiInput").value;
       closeModal("cashModal");
-
-      defaultData.buckets[0].marketValue = Number(bofa) + Number(citi);
-      renderUI(defaultData);
 
       if (API_URL && !API_URL.includes("YOUR_APPS_SCRIPT")) {
         await fetch(API_URL, {
@@ -233,22 +354,19 @@
     }
 
     async function executeTuesdayDCA() {
-      if (!confirm("Execute Tuesday DCA? This deducts \$317.06 from SPAXX cash.")) return;
+      if (!confirm("Execute Tuesday DCA? This deducts \$317.06 from SPAXX cash in Google Sheets.")) return;
       if (API_URL && !API_URL.includes("YOUR_APPS_SCRIPT")) {
         await fetch(API_URL, {
           method: "POST",
           body: JSON.stringify({ action: "EXECUTE_ROTH_TUESDAY" })
         });
         fetchData();
-      } else {
-        alert("Tuesday DCA logged locally (-\$317.06).");
       }
     }
 
     function openModal(id) { document.getElementById(id).classList.remove("hidden"); document.getElementById(id).classList.add("flex"); }
     function closeModal(id) { document.getElementById(id).classList.add("hidden"); document.getElementById(id).classList.remove("flex"); }
 
-    // Init: Load cached or default data immediately
     const cached = localStorage.getItem("cachedPortfolio");
     if (cached) {
       try { renderUI(JSON.parse(cached)); } catch(e) { renderUI(defaultData); }
